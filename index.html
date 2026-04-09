@@ -12,6 +12,7 @@
           <h1>CatPack</h1>
         </a>
       </div>
+      <a id="homeButton" href="index.html">Home</a>
       <nav id="mainNav">
         <ul>
           
@@ -26,9 +27,9 @@
       <section id="loginSection">
         <h2>Login</h2>
         <!-- Placeholder for login form -->
-        <input type="text" placeholder="Username">
-        <input type="password" placeholder="Password">
-        <button>Login</button>
+        <input type="text" id="loginUsername" placeholder="Username">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button id="loginButton">Login</button>
         <a href="signup.html" class="button-link">Sign Up</a>
       </section>
 
@@ -47,5 +48,31 @@
         </ul>
       </nav>
     </footer>
+
+    <script>
+      document.getElementById('loginButton').addEventListener('click', function () {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value;
+
+        if (!username || !password) {
+          alert('Please enter both username and password.');
+          return;
+        }
+
+        // Get users database
+        const users = JSON.parse(localStorage.getItem('catpackUsers')) || [];
+
+        // Find user with matching username and password
+        const user = users.find(u => u.username === username && u.password === password);
+
+        if (user) {
+          // Valid credentials - set current user and redirect
+          localStorage.setItem('catpackCurrentUser', username);
+          window.location.href = 'home.html';
+        } else {
+          alert('Invalid username or password.');
+        }
+      });
+    </script>
   </body>
 </html>

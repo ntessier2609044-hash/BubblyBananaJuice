@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CatPack App - Account Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      #accountPage {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      #profileSection,
+      #accountDetailsSection {
+        background-color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+      }
+
+      #profilePreview {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        display: block;
+        margin-bottom: 1rem;
+        border: 3px solid #007bff;
+      }
+
+      .account-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .account-row > div {
+        flex: 1 1 280px;
+      }
+
+      .profile-field {
+        width: 100%;
+        padding: 0.9rem;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 1rem;
+      }
+
+      .form-note {
+        margin-top: 0.5rem;
+        color: #555;
+      }
+
+      #saveAccountButton {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 0.9rem 1.4rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+
+      #saveAccountButton:hover {
+        background-color: #0056b3;
+      }
+
+      #saveProfilePictureButton {
+        background-color: #28a745;
+        color: #fff;
+        border: none;
+        padding: 0.9rem 1.4rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+
+      #saveProfilePictureButton:hover {
+        background-color: #218838;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="mainHeader">
+      <div class="logo-container">
+        <a href="secret_discount.html">
+          <img id="appLogo" src="Images/feline_flight_logo.avif" alt="CatPack Logo">
+          <h1>CatPack</h1>
+        </a>
+      </div>
+      <a id="homeButton" href="home.html">Home</a>
+      <nav id="mainNav">
+        <ul>
+          <!-- Optional navigation links could go here -->
+        </ul>
+      </nav>
+      <div id="copyrightHeader">
+        <p>&copy; 2026 CatPack Inc.</p>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section id="accountPage">
+        <h2>Account Page</h2>
+        <p>View and update your profile picture, username, and password.</p>
+
+        <section id="profileSection">
+          <h3>Your Profile Picture</h3>
+          <img id="profilePreview" src="Images/feline_flight_logo.avif" alt="Profile picture preview">
+          <label for="profilePictureInput">Change profile picture</label>
+          <input type="file" id="profilePictureInput" accept="image/*" class="profile-field">
+          <button id="saveProfilePictureButton" type="button">Save Profile Picture</button>
+          <p class="form-note">Choose an image file to preview your new profile picture.</p>
+          <p id="profileMessage" class="form-note"></p>
+        </section>
+
+        <section id="accountDetailsSection">
+          <h3>Account Details</h3>
+          <div class="account-row">
+            <div>
+              <p><strong>Current username:</strong> <span id="currentUsername">CatPackUser</span></p>
+            </div>
+            <div>
+              <p><strong>Current password:</strong> <span id="currentPasswordMasked">********</span></p>
+            </div>
+          </div>
+
+          <div class="account-row">
+            <div>
+              <label for="usernameInput">New username</label>
+              <input type="text" id="usernameInput" class="profile-field" placeholder="Enter new username">
+            </div>
+            <div>
+              <label for="passwordInput">New password</label>
+              <input type="password" id="passwordInput" class="profile-field" placeholder="Enter new password">
+            </div>
+          </div>
+          <button id="saveAccountButton" type="button">Save Changes</button>
+          <p id="accountMessage" class="form-note"></p>
+        </section>
+      </section>
+    </main>
+
+    <footer id="mainFooter">
+      <nav class="footer-nav">
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="models.html">Models</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const preview = document.getElementById('profilePreview');
+        const fileInput = document.getElementById('profilePictureInput');
+        const usernameInput = document.getElementById('usernameInput');
+        const passwordInput = document.getElementById('passwordInput');
+        const saveButton = document.getElementById('saveAccountButton');
+        const saveProfileButton = document.getElementById('saveProfilePictureButton');
+        const message = document.getElementById('accountMessage');
+        const profileMessage = document.getElementById('profileMessage');
+        const currentUsername = document.getElementById('currentUsername');
+        const currentPasswordMasked = document.getElementById('currentPasswordMasked');
+
+        // Check if user is logged in
+        let currentUser = localStorage.getItem('catpackCurrentUser');
+        if (!currentUser) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        function loadAccountInfo() {
+          const users = JSON.parse(localStorage.getItem('catpackUsers')) || [];
+          const user = users.find(u => u.username === currentUser);
+
+          if (user) {
+            currentUsername.textContent = user.username;
+            currentPasswordMasked.textContent = '********';
+          }
+
+          const savedProfilePicture = localStorage.getItem(`catpackProfilePicture_${currentUser}`);
+          if (savedProfilePicture) {
+            preview.src = savedProfilePicture;
+          }
+        }
+
+        fileInput.addEventListener('change', function () {
+          const file = fileInput.files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              preview.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+        saveProfileButton.addEventListener('click', function () {
+          if (fileInput.files.length === 0) {
+            profileMessage.textContent = 'Please select an image file first.';
+            return;
+          }
+
+          const file = fileInput.files[0];
+          if (file && file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+              const imageData = event.target.result;
+              localStorage.setItem(`catpackProfilePicture_${currentUser}`, imageData);
+              profileMessage.textContent = 'Your profile picture has been saved successfully!';
+              fileInput.value = '';
+            };
+            reader.readAsDataURL(file);
+          } else {
+            profileMessage.textContent = 'Please select a valid image file.';
+          }
+        });
+
+        saveButton.addEventListener('click', function () {
+          const newUsername = usernameInput.value.trim();
+          const newPassword = passwordInput.value;
+
+          if (!newUsername && !newPassword) {
+            message.textContent = 'Enter a new username or password to save changes.';
+            return;
+          }
+
+          let users = JSON.parse(localStorage.getItem('catpackUsers')) || [];
+          const userIndex = users.findIndex(u => u.username === currentUser);
+
+          if (userIndex === -1) {
+            message.textContent = 'Error: User not found.';
+            return;
+          }
+
+          if (newUsername && newUsername !== currentUser) {
+            // Check if new username already exists
+            if (users.some(u => u.username === newUsername && u.username !== currentUser)) {
+              message.textContent = 'Username already taken.';
+              return;
+            }
+            
+            // Update username
+            users[userIndex].username = newUsername;
+            
+            // Move profile picture to new username
+            const oldProfilePic = localStorage.getItem(`catpackProfilePicture_${currentUser}`);
+            if (oldProfilePic) {
+              localStorage.setItem(`catpackProfilePicture_${newUsername}`, oldProfilePic);
+              localStorage.removeItem(`catpackProfilePicture_${currentUser}`);
+            }
+            
+            // Update current user
+            localStorage.setItem('catpackCurrentUser', newUsername);
+            currentUser = newUsername;
+          }
+
+          if (newPassword) {
+            users[userIndex].password = newPassword;
+          }
+
+          localStorage.setItem('catpackUsers', JSON.stringify(users));
+          currentUsername.textContent = users[userIndex].username;
+          
+          if (newPassword) {
+            currentPasswordMasked.textContent = '********';
+          }
+
+          message.textContent = 'Your account changes have been updated.';
+          usernameInput.value = '';
+          passwordInput.value = '';
+        });
+
+        loadAccountInfo();
+      });
+    </script>
+  </body>
+</html>

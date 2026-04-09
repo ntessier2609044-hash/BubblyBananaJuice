@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CatPack App - Home</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      #homePage {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .welcome-section {
+        background-color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+
+      .welcome-section h2 {
+        color: #007bff;
+        margin-top: 0;
+      }
+
+      .welcome-section p {
+        font-size: 1.1rem;
+        color: #555;
+      }
+
+      #username-display {
+        font-weight: bold;
+        color: #007bff;
+      }
+
+      .navigation-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .nav-card {
+        background-color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        text-decoration: none;
+        color: #333;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .nav-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .nav-card-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+      }
+
+      .nav-card h3 {
+        color: #007bff;
+        margin: 0.5rem 0;
+        font-size: 1.3rem;
+      }
+
+      .nav-card p {
+        color: #666;
+        font-size: 0.95rem;
+        margin: 0;
+      }
+
+      .logout-button {
+        background-color: #dc3545;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 1rem;
+      }
+
+      .logout-button:hover {
+        background-color: #c82333;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="mainHeader">
+      <div class="logo-container">
+        <a href="secret_discount.html">
+          <img id="appLogo" src="Images/feline_flight_logo.avif" alt="CatPack Logo">
+          <h1>CatPack</h1>
+        </a>
+      </div>
+      <a id="homeButton" href="home.html">Home</a>
+      <nav id="mainNav">
+        <ul>
+          
+        </ul>
+      </nav>
+      <div id="copyrightHeader">
+        <p>&copy; 2026 CatPack Inc.</p>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section id="homePage">
+        <div class="welcome-section">
+          <h2>Welcome to CatPack, <span id="username-display">User</span>!</h2>
+          <p>Ready to take your feline friend to the skies? Explore all the features below.</p>
+        </div>
+
+        <div class="navigation-grid">
+          <a href="drone-flying.html" class="nav-card">
+            <div class="nav-card-icon">🛸</div>
+            <h3>Drone Flying</h3>
+            <p>Launch and control your cat drone</p>
+          </a>
+
+          <a href="account.html" class="nav-card">
+            <div class="nav-card-icon">👤</div>
+            <h3>Profile</h3>
+            <p>Update your profile and settings</p>
+          </a>
+
+          <a href="models.html" class="nav-card">
+            <div class="nav-card-icon">🐱</div>
+            <h3>Models</h3>
+            <p>Browse available drone models</p>
+          </a>
+
+          <a href="contact.html" class="nav-card">
+            <div class="nav-card-icon">📧</div>
+            <h3>Contact Us</h3>
+            <p>Get support and assistance</p>
+          </a>
+
+          <a href="faq.html" class="nav-card">
+            <div class="nav-card-icon">❓</div>
+            <h3>FAQ</h3>
+            <p>Find answers to common questions</p>
+          </a>
+
+          <a href="reviews.html" class="nav-card">
+            <div class="nav-card-icon">⭐</div>
+            <h3>Reviews</h3>
+            <p>Share your feedback with us</p>
+          </a>
+        </div>
+
+        <div style="text-align: center;">
+          <button class="logout-button" id="logoutButton">Logout</button>
+        </div>
+      </section>
+    </main>
+
+    <footer id="mainFooter">
+      <nav class="footer-nav">
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="models.html">Models</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const usernameDisplay = document.getElementById('username-display');
+        const logoutButton = document.getElementById('logoutButton');
+
+        // Check if user is logged in
+        const currentUser = localStorage.getItem('catpackCurrentUser');
+        if (!currentUser) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // Display current user's username
+        usernameDisplay.textContent = currentUser;
+
+        // Logout functionality
+        logoutButton.addEventListener('click', function () {
+          localStorage.removeItem('catpackCurrentUser');
+          window.location.href = 'index.html';
+        });
+      });
+    </script>
+  </body>
+</html>

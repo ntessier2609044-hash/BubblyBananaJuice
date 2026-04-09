@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CatPack App - Reviews</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+      #reviewsPage {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      #reviewsSection {
+        background-color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.9);
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        margin-bottom: 1.5rem;
+      }
+
+      #reviewsSection h2 {
+        color: #007bff;
+        margin-top: 0;
+      }
+
+      .review-form {
+        background-color: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .star-rating {
+        display: flex;
+        gap: 0.5rem;
+        font-size: 2rem;
+      }
+
+      .star {
+        cursor: pointer;
+        color: #ddd;
+        transition: color 0.2s, transform 0.2s;
+        user-select: none;
+      }
+
+      .star:hover,
+      .star.active {
+        color: #ffc107;
+        transform: scale(1.2);
+      }
+
+      #reviewMessage {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1rem;
+        font-family: sans-serif;
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .character-count {
+        text-align: right;
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.25rem;
+      }
+
+      .character-count.warning {
+        color: #ff6b6b;
+      }
+
+      .submit-button {
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        margin-top: 0.5rem;
+      }
+
+      .submit-button:hover {
+        background-color: #0056b3;
+      }
+
+      .submit-button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      #reviewMessage {
+        color: #333;
+      }
+
+      .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        padding: 1rem;
+        border-radius: 4px;
+        margin-bottom: 1rem;
+        display: none;
+      }
+
+      .reviews-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .review-item {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-left: 4px solid #007bff;
+        border-radius: 4px;
+      }
+
+      .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+      }
+
+      .review-rating {
+        color: #ffc107;
+        font-size: 1.2rem;
+      }
+
+      .review-time {
+        font-size: 0.85rem;
+        color: #999;
+      }
+
+      .review-text {
+        color: #333;
+        line-height: 1.5;
+        word-wrap: break-word;
+      }
+
+      .no-reviews {
+        text-align: center;
+        color: #999;
+        padding: 2rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="mainHeader">
+      <div class="logo-container">
+        <a href="secret_discount.html">
+          <img id="appLogo" src="Images/feline_flight_logo.avif" alt="CatPack Logo">
+          <h1>CatPack</h1>
+        </a>
+      </div>
+      <a id="homeButton" href="home.html">Home</a>
+      <nav id="mainNav">
+        <ul>
+          
+        </ul>
+      </nav>
+      <div id="copyrightHeader">
+        <p>&copy; 2026 CatPack Inc.</p>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section id="reviewsPage">
+        <h2>Customer Reviews</h2>
+        <p>Share your experience with CatPack! Leave a review and help other cat lovers.</p>
+
+        <section id="reviewsSection">
+          <h3>Leave a Review</h3>
+          
+          <div class="success-message" id="successMessage">
+            ✅ Thank you for your review! It has been submitted successfully.
+          </div>
+
+          <form class="review-form" id="reviewForm">
+            <div class="form-group">
+              <label for="ratingStars">Rating</label>
+              <div class="star-rating" id="ratingStars">
+                <span class="star" data-value="1">⭐</span>
+                <span class="star" data-value="2">⭐</span>
+                <span class="star" data-value="3">⭐</span>
+                <span class="star" data-value="4">⭐</span>
+                <span class="star" data-value="5">⭐</span>
+              </div>
+              <input type="hidden" id="ratingValue" value="0">
+            </div>
+
+            <div class="form-group">
+              <label for="reviewMessage">Your Review (Max 500 characters)</label>
+              <textarea id="reviewMessage" placeholder="Tell us about your experience with CatPack..." maxlength="500"></textarea>
+              <div class="character-count">
+                <span id="charCount">0</span>/500
+              </div>
+            </div>
+
+            <button type="submit" class="submit-button" id="submitReview">Submit Review</button>
+          </form>
+        </section>
+
+        <section id="reviewsSection">
+          <h3>Recent Reviews</h3>
+          <div class="reviews-list" id="reviewsList">
+            <div class="no-reviews">No reviews yet. Be the first to review CatPack!</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer id="mainFooter">
+      <nav class="footer-nav">
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="models.html">Models</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const stars = document.querySelectorAll('.star');
+        const ratingValue = document.getElementById('ratingValue');
+        const reviewMessage = document.getElementById('reviewMessage');
+        const charCount = document.getElementById('charCount');
+        const reviewForm = document.getElementById('reviewForm');
+        const submitReview = document.getElementById('submitReview');
+        const successMessage = document.getElementById('successMessage');
+        const reviewsList = document.getElementById('reviewsList');
+
+        // Check if user is logged in
+        const currentUser = localStorage.getItem('catpackCurrentUser');
+        if (!currentUser) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        let selectedRating = 0;
+        let reviews = [];
+
+        // Load reviews from localStorage for current user
+        function loadReviews() {
+          const allReviews = JSON.parse(localStorage.getItem('catpackReviews')) || [];
+          reviews = allReviews.filter(review => review.username === currentUser);
+          displayReviews();
+        }
+
+        // Display reviews
+        function displayReviews() {
+          if (reviews.length === 0) {
+            reviewsList.innerHTML = '<div class="no-reviews">No reviews yet. Be the first to review CatPack!</div>';
+            return;
+          }
+
+          reviewsList.innerHTML = reviews
+            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
+            .map(review => `
+              <div class="review-item">
+                <div class="review-header">
+                  <span class="review-rating">${'⭐'.repeat(review.rating)}</span>
+                  <span class="review-time">${new Date(review.timestamp).toLocaleDateString()}</span>
+                </div>
+                <div class="review-text">${review.text}</div>
+              </div>
+            `)
+            .join('');
+        }
+
+        // Star rating functionality
+        stars.forEach(star => {
+          star.addEventListener('click', function () {
+            selectedRating = this.dataset.value;
+            ratingValue.value = selectedRating;
+            
+            stars.forEach(s => {
+              if (s.dataset.value <= selectedRating) {
+                s.classList.add('active');
+              } else {
+                s.classList.remove('active');
+              }
+            });
+          });
+
+          star.addEventListener('mouseover', function () {
+            const hoverRating = this.dataset.value;
+            stars.forEach(s => {
+              if (s.dataset.value <= hoverRating) {
+                s.style.color = '#ffc107';
+              } else {
+                s.style.color = '#ddd';
+              }
+            });
+          });
+        });
+
+        document.getElementById('ratingStars').addEventListener('mouseleave', function () {
+          stars.forEach(s => {
+            if (s.dataset.value <= selectedRating) {
+              s.style.color = '#ffc107';
+            } else {
+              s.style.color = '#ddd';
+            }
+          });
+        });
+
+        // Character counter
+        reviewMessage.addEventListener('input', function () {
+          charCount.textContent = this.value.length;
+          if (this.value.length > 450) {
+            charCount.parentElement.classList.add('warning');
+          } else {
+            charCount.parentElement.classList.remove('warning');
+          }
+        });
+
+        // Form submission
+        reviewForm.addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          if (selectedRating === 0) {
+            alert('Please select a rating!');
+            return;
+          }
+
+          if (reviewMessage.value.trim() === '') {
+            alert('Please write a review!');
+            return;
+          }
+
+          const allReviews = JSON.parse(localStorage.getItem('catpackReviews')) || [];
+
+          const newReview = {
+            username: currentUser,
+            rating: selectedRating,
+            text: reviewMessage.value.trim(),
+            timestamp: new Date().toISOString()
+          };
+
+          allReviews.push(newReview);
+          localStorage.setItem('catpackReviews', JSON.stringify(allReviews));
+
+          // Update local reviews array with current user's reviews
+          reviews = allReviews.filter(review => review.username === currentUser);
+
+          // Reset form
+          reviewForm.reset();
+          selectedRating = 0;
+          ratingValue.value = 0;
+          charCount.textContent = '0';
+          stars.forEach(s => s.classList.remove('active'));
+
+          // Show success message
+          successMessage.style.display = 'block';
+          setTimeout(() => {
+            successMessage.style.display = 'none';
+          }, 3000);
+
+          displayReviews();
+        });
+
+        loadReviews();
+      });
+    </script>
+  </body>
+</html>

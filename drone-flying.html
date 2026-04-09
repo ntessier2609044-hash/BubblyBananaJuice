@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CatPack App - Drone Flying with Google Earth</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDummy"></script>
+    <style>
+      #dronePage {
+        display: flex;
+        flex-direction: column;
+        height: calc(100vh - 120px);
+        background-color: #f5f5f5;
+      }
+
+      .drone-header {
+        background-color: #007bff;
+        color: white;
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .main-viewport {
+        display: flex;
+        flex: 1;
+        gap: 0;
+        overflow: hidden;
+      }
+
+      #earth-canvas {
+        flex: 1;
+        background: linear-gradient(135deg, #87ceeb 0%, #e0f6ff 100%);
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .right-rail {
+        width: 280px;
+        background-color: white;
+        border-left: 1px solid #ddd;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+      }
+
+      .rail-section {
+        padding: 1rem;
+        border-bottom: 1px solid #eee;
+      }
+
+      .rail-section h3 {
+        margin: 0 0 0.75rem 0;
+        color: #007bff;
+        font-size: 0.95rem;
+      }
+
+      .preset-btn {
+        display: block;
+        width: 100%;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.2s;
+      }
+
+      .preset-btn:hover,
+      .preset-btn.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+      }
+
+      .telemetry-panel {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        background-color: rgba(0, 0, 0, 0.8);
+        color: #4ade80;
+        padding: 1rem;
+        border-radius: 6px;
+        font-family: monospace;
+        font-size: 0.85rem;
+        z-index: 100;
+        min-width: 200px;
+      }
+
+      .telemetry-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .playback-bar {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        right: 320px;
+        background-color: rgba(0, 0, 0, 0.85);
+        padding: 1rem;
+        border-radius: 6px;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        z-index: 100;
+        flex-wrap: wrap;
+      }
+
+      .play-btn {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .play-btn:hover {
+        background-color: #0056b3;
+      }
+
+      .speed-select {
+        background-color: #333;
+        color: white;
+        border: 1px solid #555;
+        padding: 0.4rem 0.6rem;
+        border-radius: 3px;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+
+      .timeline {
+        flex: 1;
+        min-width: 150px;
+        height: 4px;
+        background-color: #555;
+        border-radius: 2px;
+        cursor: pointer;
+        position: relative;
+      }
+
+      .timeline-progress {
+        height: 100%;
+        background-color: #4ade80;
+        border-radius: 2px;
+        width: 0%;
+      }
+
+      .intro-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+
+      .intro-box {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 500px;
+        text-align: center;
+      }
+
+      .intro-box h2 {
+        color: #007bff;
+        margin-top: 0;
+      }
+
+      .safety-notice {
+        background-color: #fff3cd;
+        border: 1px solid #ffc107;
+        padding: 0.75rem;
+        border-radius: 4px;
+        margin: 1rem 0;
+        font-size: 0.9rem;
+      }
+
+      .export-btn {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        width: 100%;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .camera-controls {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .control-slider {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        font-size: 0.9rem;
+      }
+
+      .control-slider input {
+        flex: 1;
+      }
+
+      .control-slider span {
+        min-width: 40px;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .right-rail {
+          display: none;
+        }
+
+        .playback-bar {
+          right: 20px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header id="mainHeader">
+      <div class="logo-container">
+        <a href="secret_discount.html">
+          <img id="appLogo" src="Images/feline_flight_logo.avif" alt="CatPack Logo">
+          <h1>CatPack</h1>
+        </a>
+      </div>
+      <a id="homeButton" href="home.html">Home</a>
+      <nav id="mainNav">
+        <ul>
+          
+        </ul>
+      </nav>
+      <div id="copyrightHeader">
+        <p>&copy; 2026 CatPack Inc.</p>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <section id="dronePage">
+        <div class="drone-header">
+          <h2>🛸 Drone Cat Flyaround 🐱</h2>
+          <select id="subjectSelect" style="padding: 0.5rem; border-radius: 4px; border: none;">
+            <option value="cat">My Cat (Sample)</option>
+            <option value="chicago">Chicago (Demo)</option>
+            <option value="custom">Custom Location</option>
+          </select>
+        </div>
+
+        <div class="main-viewport">
+          <div id="earth-canvas">
+            <div style="text-align: center; color: #666;">
+              <p>🌍 Google Earth 3D Flyaround Visualization</p>
+              <p style="font-size: 0.9rem;">Click "Start Flyaround" to begin your drone mission</p>
+            </div>
+
+            <div class="telemetry-panel" id="telemetry">
+              <div class="telemetry-item">
+                <span>Altitude:</span>
+                <span id="alt">0 ft</span>
+              </div>
+              <div class="telemetry-item">
+                <span>Distance:</span>
+                <span id="dist">0 m</span>
+              </div>
+              <div class="telemetry-item">
+                <span>Speed:</span>
+                <span id="spd">0 m/s</span>
+              </div>
+              <div class="telemetry-item">
+                <span>Heading:</span>
+                <span id="hdg">0°</span>
+              </div>
+              <div class="telemetry-item">
+                <span>Battery:</span>
+                <span id="batt">100%</span>
+              </div>
+            </div>
+
+            <div class="playback-bar">
+              <button class="play-btn" id="playBtn">▶️ Play</button>
+              <button class="play-btn" id="pauseBtn">⏸️ Pause</button>
+              <button class="play-btn" id="stopBtn">⏹️ Stop</button>
+              <select class="speed-select" id="speedSelect">
+                <option value="0.5">0.5x</option>
+                <option value="1" selected>1x</option>
+                <option value="2">2x</option>
+              </select>
+              <div class="timeline" id="timeline"><div class="timeline-progress" id="progress"></div></div>
+              <span style="color: #4ade80; font-size: 0.85rem; min-width: 50px;" id="timeDisplay">0:00</span>
+            </div>
+          </div>
+
+          <div class="right-rail">
+            <div class="rail-section">
+              <h3>Flight Presets</h3>
+              <button class="preset-btn active" data-preset="close">Close Orbit</button>
+              <button class="preset-btn" data-preset="wide">Wide Orbit</button>
+              <button class="preset-btn" data-preset="sweep">Low Sweep</button>
+              <button class="preset-btn" data-preset="arc">High Arc</button>
+              <button class="preset-btn" data-preset="free">Free Camera</button>
+            </div>
+
+            <div class="rail-section">
+              <h3>Camera Control</h3>
+              <label style="display: flex; gap: 0.5rem;">
+                <input type="checkbox" id="orbitToggle" checked>
+                <span>Auto Orbit</span>
+              </label>
+              <div class="control-slider">
+                <label style="min-width: 80px;">Radius:</label>
+                <input type="range" id="orbitRadius" min="50" max="500" value="150" style="flex: 1;">
+                <span id="radiusVal">150m</span>
+              </div>
+              <div class="control-slider">
+                <label style="min-width: 80px;">Altitude:</label>
+                <input type="range" id="altAdjust" min="0" max="300" value="100" style="flex: 1;">
+                <span id="altVal">100m</span>
+              </div>
+            </div>
+
+            <div class="rail-section">
+              <h3>Waypoints</h3>
+              <div id="waypointList" style="max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
+                <div style="padding: 0.5rem; background-color: #f9f9f9; border-radius: 3px; margin-bottom: 0.25rem;">Start (0, 0)</div>
+                <div style="padding: 0.5rem; background-color: #f9f9f9; border-radius: 3px; margin-bottom: 0.25rem;">45° (100, 50)</div>
+                <div style="padding: 0.5rem; background-color: #f9f9f9; border-radius: 3px; margin-bottom: 0.25rem;">90° (150, 75)</div>
+                <div style="padding: 0.5rem; background-color: #f9f9f9; border-radius: 3px;">End (0, 0)</div>
+              </div>
+            </div>
+
+            <div class="rail-section">
+              <button class="export-btn" id="exportBtn">📥 Export Mission</button>
+              <button class="export-btn" style="background-color: #17a2b8;" id="replayBtn">🔄 Replay</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="intro-modal" id="introModal">
+          <div class="intro-box">
+            <h2>Welcome to Drone Flyaround</h2>
+            <ul style="text-align: left;">
+              <li>🎬 Watch an automated flight path around your subject</li>
+              <li>⚙️ Customize camera angles and flight parameters</li>
+              <li>📤 Export the mission to your drone autopilot</li>
+            </ul>
+            <div class="safety-notice">
+              ⚠️ <strong>Safety Notice:</strong> This simulation is for demo purposes only. Always maintain visual line of sight when flying a real drone.
+            </div>
+            <button style="padding: 0.75rem 1.5rem; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; margin-top: 1rem;" id="startBtn">Start Flyaround</button>
+          </div>
+        </div>
+      </section>
+    </main>
+          <h2>🛸 Launch Your Cat Drone 🐱</h2>
+
+          <div class="drone-simulator">
+            <div id="droneCat">😸🛸</div>
+          </div>
+
+          <div id="statusMessage" class="info" style="display: none;"></div>
+
+          <div class="status-display">
+            <div class="status-item">
+              <span class="status-label">Drone Status:</span>
+              <span class="status-value" id="droneStatus">Ready</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Altitude:</span>
+              <span class="status-value" id="altitude">0 ft</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Position (X, Y):</span>
+              <span class="status-value" id="position">0, 0</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Battery:</span>
+              <span class="status-value" id="battery">100%</span>
+            </div>
+            <div class="status-item">
+              <span class="status-label">Flight Time:</span>
+              <span class="status-value" id="flightTime">0s</span>
+            </div>
+          </div>
+
+          <div class="control-panel">
+            <div class="control-row">
+              <div class="control-group">
+                <label for="modelSelect">Drone Model:</label>
+                <select id="modelSelect">
+                  <option value="standard">Standard Cat Drone</option>
+                  <option value="premium">Premium Cat Drone</option>
+                  <option value="racing">Racing Cat Drone</option>
+                </select>
+              </div>
+
+              <div class="control-group">
+                <label for="altitudeInput">Target Altitude (ft):</label>
+                <input type="number" id="altitudeInput" min="0" max="500" value="100" placeholder="Enter altitude">
+              </div>
+
+              <div class="control-group">
+                <label for="speedInput">Speed (mph):</label>
+                <input type="number" id="speedInput" min="0" max="50" value="20" placeholder="Enter speed">
+              </div>
+            </div>
+
+            <div class="control-row">
+              <div class="button-group">
+                <button class="control-button" id="launchButton">✈️ Launch Drone</button>
+                <button class="control-button" id="landButton">📍 Land Drone</button>
+                <button class="control-button stop" id="emergencyButton">🚨 Emergency Stop</button>
+              </div>
+            </div>
+
+            <div class="joystick-container">
+              <div class="joystick-section">
+                <label>Left/Right Movement</label>
+                <div class="joystick" id="horizontalJoystick">
+                  <div class="joystick-axis joystick-vertical"></div>
+                  <div class="joystick-stick" id="horizontalStick"></div>
+                </div>
+                <div class="position-info" id="horizontalInfo">0</div>
+              </div>
+
+              <div class="joystick-section">
+                <label>Up/Down Altitude</label>
+                <div class="joystick" id="verticalJoystick">
+                  <div class="joystick-axis joystick-horizontal"></div>
+                  <div class="joystick-stick" id="verticalStick"></div>
+                </div>
+                <div class="position-info" id="verticalInfo">0</div>
+              </div>
+            </div>
+          </div>
+
+          <p style="color: #666; font-size: 0.95rem; text-align: center;">
+            Welcome to the CatPack drone flying simulator! Select your drone model, set your parameters, and launch your cat into the skies.
+          </p>
+        </section>
+      </section>
+    </main>
+
+    <footer id="mainFooter">
+      <nav class="footer-nav">
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="models.html">Models</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </nav>
+    </footer>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        // Check if user is logged in
+        const currentUser = localStorage.getItem('catpackCurrentUser');
+        if (!currentUser) {
+          window.location.href = 'index.html';
+          return;
+        }
+
+        // ===== FLIGHT SIMULATION ENGINE =====
+        const FlightSimulator = {
+          currentPreset: 'close',
+          isPlaying: false,
+          playbackSpeed: 1,
+          currentTime: 0,
+          totalTime: 60,
+          waypoints: [],
+          flightPath: [],
+          
+          presets: {
+            close: {
+              name: 'Close Orbit',
+              radius: 50,
+              altitude: 80,
+              duration: 60,
+              tilt: 45
+            },
+            wide: {
+              name: 'Wide Orbit',
+              radius: 200,
+              altitude: 150,
+              duration: 120,
+              tilt: 30
+            },
+            sweep: {
+              name: 'Low Sweep',
+              radius: 150,
+              altitude: 30,
+              duration: 90,
+              tilt: 60
+            },
+            arc: {
+              name: 'High Arc',
+              radius: 300,
+              altitude: 250,
+              duration: 150,
+              tilt: 20
+            },
+            free: {
+              name: 'Free Camera',
+              radius: 100,
+              altitude: 100,
+              duration: 60,
+              tilt: 45
+            }
+          },
+
+          generateWaypoints(preset) {
+            const config = this.presets[preset];
+            this.waypoints = [];
+            const steps = 12; // 12 points around circle
+            
+            for (let i = 0; i <= steps; i++) {
+              const angle = (i / steps) * Math.PI * 2;
+              const x = Math.cos(angle) * config.radius;
+              const y = Math.sin(angle) * config.radius;
+              
+              this.waypoints.push({
+                lat: 41.8781 + (y / 111000),
+                lon: -87.6298 + (x / 111000),
+                altitude: config.altitude + Math.sin(angle * 2) * 10,
+                heading: angle * 180 / Math.PI,
+                time: (i / steps) * config.duration
+              });
+            }
+            
+            this.totalTime = config.duration;
+            this.currentTime = 0;
+            return this.waypoints;
+          },
+
+          getCurrentPosition(t) {
+            if (this.waypoints.length === 0) return null;
+            
+            let segment = 0;
+            for (let i = 0; i < this.waypoints.length - 1; i++) {
+              if (t >= this.waypoints[i].time && t <= this.waypoints[i + 1].time) {
+                segment = i;
+                break;
+              }
+            }
+
+            const p0 = this.waypoints[segment];
+            const p1 = this.waypoints[Math.min(segment + 1, this.waypoints.length - 1)];
+            
+            const dt = p1.time - p0.time;
+            const progress = dt === 0 ? 0 : (t - p0.time) / dt;
+            
+            return {
+              lat: p0.lat + (p1.lat - p0.lat) * progress,
+              lon: p0.lon + (p1.lon - p0.lon) * progress,
+              altitude: p0.altitude + (p1.altitude - p0.altitude) * progress,
+              heading: p0.heading + (p1.heading - p0.heading) * progress,
+              distance: Math.sqrt(Math.pow(p1.lat - p0.lat, 2) + Math.pow(p1.lon - p0.lon, 2)) * 111000 * progress,
+              speed: 15
+            };
+          },
+
+          exportMission() {
+            const mission = {
+              version: 1,
+              type: 'cat_drone_survey',
+              name: `CatPack Mission - ${new Date().toLocaleString()}`,
+              presetUsed: this.currentPreset,
+              waypoints: this.waypoints,
+              exportedBy: currentUser,
+              exportedAt: new Date().toISOString(),
+              subject: { lat: 41.8781, lon: -87.6298 },
+              settings: { maxAltitude: 300, maxSpeed: 20 }
+            };
+            
+            const dataStr = JSON.stringify(mission, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `catpack_mission_${Date.now()}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+          }
+        };
+
+        // ===== UI ELEMENTS =====
+        const elements = {
+          introModal: document.getElementById('introModal'),
+          startBtn: document.getElementById('startBtn'),
+          playBtn: document.getElementById('playBtn'),
+          pauseBtn: document.getElementById('pauseBtn'),
+          stopBtn: document.getElementById('stopBtn'),
+          speedSelect: document.getElementById('speedSelect'),
+          timeline: document.getElementById('timeline'),
+          progress: document.getElementById('progress'),
+          timeDisplay: document.getElementById('timeDisplay'),
+          telemetry: {
+            alt: document.getElementById('alt'),
+            dist: document.getElementById('dist'),
+            spd: document.getElementById('spd'),
+            hdg: document.getElementById('hdg'),
+            batt: document.getElementById('batt')
+          },
+          presetBtns: document.querySelectorAll('.preset-btn'),
+          exportBtn: document.getElementById('exportBtn'),
+          replayBtn: document.getElementById('replayBtn'),
+          orbitToggle: document.getElementById('orbitToggle'),
+          orbitRadius: document.getElementById('orbitRadius'),
+          altAdjust: document.getElementById('altAdjust'),
+          radiusVal: document.getElementById('radiusVal'),
+          altVal: document.getElementById('altVal'),
+          canvas: document.getElementById('earth-canvas')
+        };
+
+        // ===== EVENT LISTENERS =====
+        elements.startBtn.addEventListener('click', () => {
+          elements.introModal.style.display = 'none';
+          FlightSimulator.generateWaypoints('close');
+          FlightSimulator.isPlaying = true;
+          updateTelemetry();
+        });
+
+        elements.playBtn.addEventListener('click', () => {
+          FlightSimulator.isPlaying = true;
+          elements.playBtn.disabled = true;
+          elements.pauseBtn.disabled = false;
+        });
+
+        elements.pauseBtn.addEventListener('click', () => {
+          FlightSimulator.isPlaying = false;
+          elements.playBtn.disabled = false;
+          elements.pauseBtn.disabled = true;
+        });
+
+        elements.stopBtn.addEventListener('click', () => {
+          FlightSimulator.isPlaying = false;
+          FlightSimulator.currentTime = 0;
+          elements.progress.style.width = '0%';
+          elements.timeDisplay.textContent = '0:00';
+          updateTelemetry();
+        });
+
+        elements.speedSelect.addEventListener('change', (e) => {
+          FlightSimulator.playbackSpeed = parseFloat(e.target.value);
+        });
+
+        elements.timeline.addEventListener('click', (e) => {
+          const rect = elements.timeline.getBoundingClientRect();
+          const percent = (e.clientX - rect.left) / rect.width;
+          FlightSimulator.currentTime = percent * FlightSimulator.totalTime;
+          updateTelemetry();
+        });
+
+        elements.presetBtns.forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            elements.presetBtns.forEach(b => b.classList.remove('active'));
+            e.target.classList.add('active');
+            FlightSimulator.currentPreset = e.target.dataset.preset;
+            FlightSimulator.generateWaypoints(FlightSimulator.currentPreset);
+            FlightSimulator.currentTime = 0;
+            updateTelemetry();
+          });
+        });
+
+        elements.exportBtn.addEventListener('click', () => {
+          if (FlightSimulator.waypoints.length > 0) {
+            FlightSimulator.exportMission();
+          }
+        });
+
+        elements.replayBtn.addEventListener('click', () => {
+          FlightSimulator.currentTime = 0;
+          FlightSimulator.isPlaying = true;
+        });
+
+        elements.orbitRadius.addEventListener('input', (e) => {
+          elements.radiusVal.textContent = e.target.value + 'm';
+        });
+
+        elements.altAdjust.addEventListener('input', (e) => {
+          elements.altVal.textContent = e.target.value + 'm';
+        });
+
+        // ===== TELEMETRY UPDATE =====
+        function updateTelemetry() {
+          const pos = FlightSimulator.getCurrentPosition(FlightSimulator.currentTime);
+          if (!pos) return;
+
+          const battery = Math.max(0, 100 - (FlightSimulator.currentTime / FlightSimulator.totalTime * 40));
+          
+          elements.telemetry.alt.textContent = Math.round(pos.altitude * 3.28084) + ' ft';
+          elements.telemetry.dist.textContent = Math.round(pos.distance) + ' m';
+          elements.telemetry.spd.textContent = Math.round(pos.speed) + ' m/s';
+          elements.telemetry.hdg.textContent = Math.round(pos.heading) + '°';
+          elements.telemetry.batt.textContent = Math.round(battery) + '%';
+        }
+
+        // ===== ANIMATION LOOP =====
+        function animate() {
+          if (FlightSimulator.isPlaying) {
+            FlightSimulator.currentTime += 0.016 * FlightSimulator.playbackSpeed;
+            
+            if (FlightSimulator.currentTime >= FlightSimulator.totalTime) {
+              FlightSimulator.currentTime = FlightSimulator.totalTime;
+              FlightSimulator.isPlaying = false;
+            }
+          }
+
+          const progress = (FlightSimulator.currentTime / FlightSimulator.totalTime) * 100;
+          elements.progress.style.width = progress + '%';
+          
+          const mins = Math.floor(FlightSimulator.currentTime / 60);
+          const secs = Math.floor(FlightSimulator.currentTime % 60);
+          elements.timeDisplay.textContent = `${mins}:${secs.toString().padStart(2, '0')}`;
+          
+          updateTelemetry();
+          requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        FlightSimulator.generateWaypoints('close');
+        animate();
+      });
+    </script>
+
+    <footer id="mainFooter">
+      <nav class="footer-nav">
+        <ul>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="models.html">Models</a></li>
+          <li><a href="contact.html">Contact Us</a></li>
+        </ul>
+      </nav>
+    </footer>
+  </main>
+  </body>
+</html>
